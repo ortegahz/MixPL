@@ -149,3 +149,5 @@ default_hooks = dict(
 log_processor = dict(by_epoch=False)
 custom_hooks = [dict(type='MeanTeacherHook', momentum=0.0002, gamma=4)]
 resume=True
+
+visualizer = dict(vis_backends = [dict(type='LocalVisBackend'), dict(type='WandbVisBackend')]) # noqa
