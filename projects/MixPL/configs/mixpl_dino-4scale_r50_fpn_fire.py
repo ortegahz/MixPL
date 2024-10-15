@@ -1,5 +1,5 @@
 _base_ = [
-    'mmdet::_base_/default_runtime.py', 'mixpl_coco_detection.py'
+    'mmdet::_base_/default_runtime.py', 'mixpl_fire_detection.py'
 ]
 
 custom_imports = dict(
@@ -63,7 +63,7 @@ detector = dict(
         temperature=20),  # 10000 for DeformDETR
     bbox_head=dict(
         type='DINOHead',
-        num_classes=80,
+        num_classes=3,
         sync_cls_avg_factor=True,
         loss_cls=dict(
             type='FocalLoss',
@@ -113,13 +113,12 @@ model = dict(
         min_pseudo_bbox_wh=(1e-2, 1e-2)),
     semi_test_cfg=dict(predict_on='teacher'))
 
-# 10% coco train2017 is set as labeled dataset
 labeled_dataset = _base_.labeled_dataset
 unlabeled_dataset = _base_.unlabeled_dataset
-labeled_dataset.ann_file = 'semi_anns/instances_train2017.1@10.json'
-unlabeled_dataset.ann_file = 'semi_anns/instances_train2017.1@10-unlabeled.json'
-labeled_dataset.data_prefix = dict(img='train2017/')
-unlabeled_dataset.data_prefix = dict(img='train2017/')
+labeled_dataset.ann_file = _base_.data_root_sup + 'annotations/voc07_train.json'
+unlabeled_dataset.ann_file = _base_.data_root_unsup + 'annotations/voc07_train.json'
+labeled_dataset.data_prefix = dict(img='')
+unlabeled_dataset.data_prefix = dict(img='')
 
 train_dataloader = dict(
     batch_size=5,
@@ -130,7 +129,7 @@ train_dataloader = dict(
 # training schedule for 90k
 _multi = 1  # 8 / N gpus
 train_cfg = dict(
-    type='IterBasedTrainLoop', max_iters=90000 * _multi, val_interval=5000 * _multi)
+    type='IterBasedTrainLoop', max_iters=90000 * _multi, val_interval=5000)
 val_cfg = dict(type='TeacherStudentValLoop')
 test_cfg = dict(type='TestLoop')
 

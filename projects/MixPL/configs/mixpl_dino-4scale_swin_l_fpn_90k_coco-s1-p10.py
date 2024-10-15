@@ -2,6 +2,8 @@ _base_ = [
     'mmdet::_base_/default_runtime.py', 'mixpl_coco_detection.py'
 ]
 
+pretrained = 'https://github.com/SwinTransformer/storage/releases/download/v1.0.0/swin_large_patch4_window12_384_22k.pth'  # noqa
+
 custom_imports = dict(
     imports=['projects.MixPL.mixpl'], allow_failed_imports=False)
 
@@ -17,18 +19,28 @@ detector = dict(
         bgr_to_rgb=True,
         pad_size_divisor=1),
     backbone=dict(
-        type='ResNet',
-        depth=50,
-        num_stages=4,
+        type='SwinTransformer',
+        pretrain_img_size=384,
+        embed_dims=192,
+        depths=[2, 2, 18, 2],
+        num_heads=[6, 12, 24, 48],
+        window_size=12,
+        mlp_ratio=4,
+        qkv_bias=True,
+        qk_scale=None,
+        drop_rate=0.,
+        attn_drop_rate=0.,
+        drop_path_rate=0.3,
+        patch_norm=True,
         out_indices=(1, 2, 3),
-        frozen_stages=1,
-        norm_cfg=dict(type='BN', requires_grad=False),
-        norm_eval=True,
-        style='pytorch',
-        init_cfg=dict(type='Pretrained', checkpoint='ckpt/resnet50-0676ba61.pth')),
+        # Please only add indices that would be used
+        # in FPN, otherwise some parameter will not be used
+        with_cp=True,
+        convert_weights=True,
+        init_cfg=dict(type='Pretrained', checkpoint=pretrained)),
     neck=dict(
         type='ChannelMapper',
-        in_channels=[512, 1024, 2048],
+        in_channels=[384, 768, 1536],
         kernel_size=1,
         out_channels=256,
         act_cfg=None,
@@ -130,7 +142,7 @@ train_dataloader = dict(
 # training schedule for 90k
 _multi = 1  # 8 / N gpus
 train_cfg = dict(
-    type='IterBasedTrainLoop', max_iters=90000 * _multi, val_interval=5000 * _multi)
+    type='IterBasedTrainLoop', max_iters=90000 * _multi, val_interval=5000)
 val_cfg = dict(type='TeacherStudentValLoop')
 test_cfg = dict(type='TestLoop')
 
@@ -151,4 +163,5 @@ log_processor = dict(by_epoch=False)
 custom_hooks = [dict(type='MeanTeacherHook', momentum=0.0002, gamma=4)]
 resume = True
 
-visualizer = dict(vis_backends=[dict(type='LocalVisBackend'), dict(type='WandbVisBackend')])  # noqa
+# visualizer = dict(vis_backends=[dict(type='LocalVisBackend'), dict(type='WandbVisBackend')])  # noqa
+# find_unused_parameters = True

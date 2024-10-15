@@ -8,6 +8,7 @@ from mmengine.utils import track_iter_progress
 
 from mmdet.apis import inference_detector, init_detector
 from mmdet.registry import VISUALIZERS
+from projects.LabelStudio.backend_template.mmdetection import logger
 
 
 def parse_args():
@@ -37,6 +38,7 @@ def main():
          'video) with the argument "--out" or "--show"')
 
     # build the model from a config file and a checkpoint file
+    logger.info(args.config)
     model = init_detector(args.config, args.checkpoint, device=args.device)
 
     # build test pipeline
